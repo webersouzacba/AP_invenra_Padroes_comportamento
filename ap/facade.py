@@ -7,6 +7,8 @@ from .builder import WordSearchGameBuilder
 from .contract_adapter import ContractAdapter
 from .instance_manager import InstanceManager
 from .persistence_proxy import PersistenceProxy
+from .event_bus import EventBus
+from .observer import DomainEvent
 
 # Contrato de parâmetros da atividade no formato Inven!RA.
 # Fonte única de verdade para o endpoint /params /json_params_url.
@@ -42,6 +44,7 @@ class ActivityProviderFacade:
         instance_manager: InstanceManager,
         builder: WordSearchGameBuilder,
         base_url: str = "",
+    event_bus: Optional[EventBus] = None,
     ) -> None:
         self.adapter = adapter
         self.proxy = proxy
@@ -49,6 +52,7 @@ class ActivityProviderFacade:
         self.builder = builder
         self.base_url = (base_url or "").rstrip("/")
         self._params_contract = _PARAMS_CONTRACT
+        self.event_bus = event_bus
 
     # Utilitário interno para resolver o base_url efetivo
 
@@ -187,6 +191,20 @@ Encontre todas as palavras relacionadas ao tema proposto, no idioma alvo, dentro
         if user_id:
             entry_url = f"{entry_url}?userID={user_id}"
 
+        # Observer (Atividade 6): publica evento de resolução do deploy/user_url
+        if self.event_bus:
+            self.event_bus.publish(
+                DomainEvent.now(
+                    name="deploy_resolved",
+                    payload={
+                        "activityID": activity_id,
+                        "userID": user_id,
+                        "instance_id": instance_id,
+                        "entry_url": entry_url,
+                    },
+                )
+            )
+
         return {
             "activityID": activity_id,
             "entry_url": entry_url,
@@ -321,10 +339,29 @@ Encontre todas as palavras relacionadas ao tema proposto, no idioma alvo, dentro
         instance["access_count"] = int(instance.get("access_count", 0)) + 1
         instance["last_access"] = dt.datetime.utcnow().isoformat() + "Z"
         self.proxy.upsert_instance(instance_id, instance)
+        # Observer (Atividade 6): publica evento de acesso ao jogo
+        if self.event_bus:
+            self.event_bus.publish(
+                DomainEvent.now(
+                    name="game_access",
+                    payload={
+                        "activityID": activity_id,
+                        "userID": user_id,
+                        "instance_id": instance_id,
+                        "access_count": instance.get("access_count"),
+                        "last_access": instance.get("last_access"),
+                    },
+                )
+            )
+        else:
+            # Fallback: mantém compatibilidade caso event_bus não seja injetado
+            self.proxy.append_event({
+                "ts": dt.datetime.utcnow().isoformat() + "Z",
+                "type": "game_access",
+                "activityID": activity_id,
+                "userID": user_id,
+                "instance_id": instance_id,
+                "access_count": instance.get("access_count"),
+                "last_access": instance.get("last_access"),
+            })
 
-        self.proxy.append_event({
-            "ts": dt.datetime.utcnow().isoformat() + "Z",
-            "type": "game_access",
-            "activityID": activity_id,
-            "userID": user_id,
-        })

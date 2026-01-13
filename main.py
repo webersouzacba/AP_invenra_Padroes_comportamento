@@ -11,6 +11,8 @@ from fastapi.staticfiles import StaticFiles
 from ap.builder import WordSearchGameBuilder
 from ap.contract_adapter import ContractAdapter
 from ap.facade import ActivityProviderFacade
+from ap.event_bus import EventBus
+from ap.activity_observers import PersistenceEventObserver
 from ap.instance_manager import InstanceManager
 from ap.models import (
     AnalyticsListResponse,
@@ -68,6 +70,8 @@ def create_app() -> FastAPI:
     )
     db = JsonFileDatabase(data_path)
     proxy = PersistenceProxy(db)
+    event_bus = EventBus()
+    event_bus.attach(PersistenceEventObserver(proxy))
     adapter = ContractAdapter()
     instance_manager = InstanceManager()
     builder = WordSearchGameBuilder()
@@ -80,6 +84,7 @@ def create_app() -> FastAPI:
         instance_manager=instance_manager,
         builder=builder,
         base_url=_base_url_from_env(),
+        event_bus=event_bus,
     )
 
     static_dir = os.path.join(os.path.dirname(__file__), "static")
