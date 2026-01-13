@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Teste do serviço POST /analytics</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 1.5rem; }
+    h3 { margin-bottom: 0.5rem; }
+    button { padding: 0.4rem 0.8rem; }
+    pre {
+      margin-top: 1rem;
+      padding: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #f7f7f7;
+      max-width: 900px;
+      overflow: auto;
+    }
+  </style>
+  <script>
+    // Detecta a base da aplicação (para funcionar em subpath / proxy)
+    (function () {
+      const p = window.location.pathname;
+      const prefix = p.includes("/static/") ? p.split("/static/")[0] : "";
+      window.__APP_PREFIX__ = (prefix || "").replace(/\/$/, "");
+      window.__BASE__ = window.location.origin + (window.__APP_PREFIX__ || "");
+    })();
+  </script>
+</head>
+<body>
+  <h3>Teste do serviço POST /analytics</h3>
+
+  <button onclick="testar()">Enviar pedido de analytics</button>
+
+  <h4>Resposta:</h4>
+  <pre id="resposta"></pre>
+
+  <script>
+    async function testar() {
+      const url = window.__BASE__ + "/analytics";
+      const body = { activityID: "TESTE123" };
+
+      try {
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(body)
+        });
+
+        const data = await resp.json();
+        document.getElementById("resposta").textContent =
+          JSON.stringify(data, null, 2);
+      } catch (e) {
+        document.getElementById("resposta").textContent =
+          "Erro ao chamar o serviço: " + e;
+      }
+    }
+  </script>
+</body>
+</html>

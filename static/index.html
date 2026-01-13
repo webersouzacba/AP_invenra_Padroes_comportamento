@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <title>Activity Provider – Inven!RA (Padrões Estruturais)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 2rem;
+    }
+    .card {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 1.8rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    }
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+    pre {
+      background: #0b1020;
+      color: #e5efff;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow: auto;
+      font-size: 0.9rem;
+    }
+    section {
+      margin-top: 1.5rem;
+    }
+    ul {
+      padding-left: 1.2rem;
+    }
+    a {
+      color: #0056b3;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .muted {
+      color: #666;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>MEIW – Mestrado em Engenharia Informática e Tecnologia Web</h1>
+    <p class="muted">
+      Arquitetura e Padrões de Software (APSI)<br/>
+      Ano letivo 2025/2026
+    </p>
+
+    <h2>Arquitetura Inven!RA – Activity Provider – Sopa de Letras (Padrões Estruturais)</h2>
+
+    <section>
+      <h3>JSON para registo dos URLs de serviços na Inven!RA:</h3>
+      <pre>{
+  "name": "Sopa de Letras – APSI (Padrões Estruturais)",
+  "config_url":    "http://69.6.220.255:9001/config",
+  "json_params_url":"http://69.6.220.255:9001/params",
+  "user_url":      "http://69.6.220.255:9001/deploy",
+  "analytics_url": "http://69.6.220.255:9001/analytics",
+  "analytics_list_url":"http://69.6.220.255:9001/analytics/available"
+}</pre>
+    </section>
+
+    <section>
+      <h3>Endpoints</h3>
+      <ul>
+        <li><a href="/config" target="_blank">/config</a> – Página de configuração da atividade (HTML)</li>
+        <li><a href="/params" target="_blank">/params</a> – Lista de parâmetros configuráveis (JSON)</li>
+        <li><a href="/analytics/available" target="_blank">/analytics/available</a> – Lista de analytics disponíveis (JSON)</li>
+        <li><a href="/deploy?activityID=TESTE123" target="_blank">/deploy?activityID=TESTE123</a> – Simulação de Deploy</li>
+        <li><a href="/static/teste_analytics_POST.html" target="_blank">/analytics – Página de teste do POST (JSON)</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>Swagger UI</h3>
+      <ul>
+        <li><a href="/docs" target="_blank">/docs – Swagger UI</a></li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>
