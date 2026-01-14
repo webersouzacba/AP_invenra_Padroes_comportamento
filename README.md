@@ -1,5 +1,5 @@
 # Activity Provider – Inven!RA
-### Jogo Sopa de Letras – Padrões Estruturais (Facade + Adapter + Proxy)
+### Jogo Sopa de Letras – Padrões de Comportamento (Observer)
 
 ### UC: Arquitetura e Padrões de Software (APSI) – MEIW – UAb/UTAD  
 ### Ano letivo 2025/2026
@@ -11,9 +11,10 @@
 
 Este projeto implementa um **Activity Provider** compatível com a plataforma **Inven!RA**, com foco na e-atividade de **padrões estruturais**, evidenciando explicitamente:
 
-- **Facade**: `ActivityProviderFacade` como ponto único para os casos de uso do Activity Provider
-- **Adapter** (apoio): `ContractAdapter` para normalização/validação e adaptação do contrato (requests/DTOs)
-- **Proxy** (apoio): `PersistenceProxy` para intermediar o acesso à persistência (cache + lazy load + centralização de acesso)
+- **Observer (principal)**: `EventBus` (Subject) publica eventos (`DomainEvent`) e `PersistenceEventObserver` (Observer) reage persistindo eventos para analytics.
+- **Facade (base)**: `ActivityProviderFacade` permanece como ponto único de orquestração dos casos de uso do Activity Provider.
+- **Proxy/Adapter (base)**: `PersistenceProxy` e `ContractAdapter` seguem como apoio para persistência e adaptação de contrato.
+
 
 Como suporte (de atividades anteriores), este projeto mantém:
 - **Builder**: `WordSearchGameBuilder` para criação/configuração da instância do jogo
@@ -42,7 +43,7 @@ O Activity Provider permite que a plataforma Inven!RA:
 
 O serviço está publicado em:
 
-`http://69.6.220.255:9001/`
+`http://69.6.220.255:9002/`
 
 ---
 📡 Integração com a Inven!RA
@@ -51,12 +52,12 @@ JSON de registo do Activity Provider
 
 ```json
 {
-  "name": "Sopa de Letras – APSI (Padrões Estruturais)",
-  "config_url":    "http://69.6.220.255:9001/config",
-  "json_params_url":"http://69.6.220.255:9001/params",
-  "user_url":      "http://69.6.220.255:9001/deploy",
-  "analytics_url": "http://69.6.220.255:9001/analytics",
-  "analytics_list_url":"http://69.6.220.255:9001/analytics/available"
+  "name": "Sopa de Letras – APSI (Padrões de Comportamento – Observer)",
+  "config_url":    "http://69.6.220.255:9002/config",
+  "json_params_url":"http://69.6.220.255:9002/params",
+  "user_url":      "http://69.6.220.255:9002/deploy",
+  "analytics_url": "http://69.6.220.255:9002/analytics",
+  "analytics_list_url":"http://69.6.220.255:9002/analytics/available"
 }
 ```
 
@@ -72,7 +73,7 @@ Retorna HTML contendo os campos de configuração.
 Exemplo:
 
 ```text
-http://69.6.220.255:9001/config
+http://69.6.220.255:9002/config
 ```
 
 ---
@@ -86,7 +87,7 @@ Retorna JSON com schema/parametrização.
 Exemplo:
 
 ```text
-http://69.6.220.255:9001/params
+http://69.6.220.255:9002/params
 ```
 
 ---
@@ -100,7 +101,7 @@ Retorna JSON com `entry_url` (URL de acesso ao jogo para o aluno).
 Exemplo:
 
 ```text
-http://69.6.220.255:9001/deploy?activityID=TESTE123
+http://69.6.220.255:9002/deploy?activityID=TESTE123
 ```
 
 ---
@@ -112,7 +113,7 @@ http://69.6.220.255:9001/deploy?activityID=TESTE123
 URL:
 
 ```text
-http://69.6.220.255:9001/analytics
+http://69.6.220.255:9002/analytics
 ```
 
 Body exemplo:
@@ -135,7 +136,7 @@ Body exemplo:
 Exemplo:
 
 ```text
-http://69.6.220.255:9001/analytics/available
+http://69.6.220.255:9002/analytics/available
 ```
 
 ---
@@ -145,7 +146,7 @@ http://69.6.220.255:9001/analytics/available
 Para testar o endpoint sem Postman, use a página HTML interativa:
 
 ```text
-http://69.6.220.255:9001/static/teste_analytics_POST.html
+http://69.6.220.255:9002/static/teste_analytics_POST.html
 ```
 
 ---
@@ -153,7 +154,7 @@ http://69.6.220.255:9001/static/teste_analytics_POST.html
 ## Swagger (documentação automática)
 
 ```text
-http://69.6.220.255:9001/docs
+http://69.6.220.255:9002/docs
 ```
 
 ---
@@ -216,9 +217,64 @@ Abrir:
 
 ---
 
+
+---
+
+# Publicação no VPS (HostGator / AlmaLinux) – systemd
+
+Este projeto foi publicado como um serviço dedicado do **systemd** na porta **9002**, sem substituir as versões anteriores (9000/9001).
+
+## Serviço
+
+Nome do serviço:
+
+`ap-invenra-padroes-comportamento.service`
+
+Arquivo (no servidor):
+
+`/etc/systemd/system/ap-invenra-padroes-comportamento.service`
+
+Conteúdo de referência:
+
+```ini
+[Unit]
+Description=InvenRA Activity Provider - Padroes de Comportamento (FastAPI/Uvicorn)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/apps/AP_invenra_Padroes_comportamento
+ExecStart=/opt/apps/AP_invenra_Padroes_comportamento/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 9002
+Restart=always
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Comandos úteis:
+
+```bash
+systemctl daemon-reload
+systemctl enable --now ap-invenra-padroes-comportamento
+systemctl status ap-invenra-padroes-comportamento --no-pager
+journalctl -u ap-invenra-padroes-comportamento -f
+```
+
+## URLs (produção)
+
+- `http://69.6.220.255:9002/config`
+- `http://69.6.220.255:9002/params`
+- `http://69.6.220.255:9002/deploy`
+- `http://69.6.220.255:9002/analytics`
+- `http://69.6.220.255:9002/analytics/available`
+
 # Repositório no GitHub
 
 Nome do repositório:
 
-`AP_invenra_Padrões_estrutura`
+`AP_invenra_Padroes_comportamento`
 ---
