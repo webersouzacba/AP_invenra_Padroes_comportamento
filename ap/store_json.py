@@ -11,7 +11,7 @@ class JsonFileDatabase:
         self.filepath = filepath
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         if not os.path.exists(filepath):
-            self._write({"instances": {}, "events": []})
+            self._write({"instances": {}, "events": [], "aggregates": {}})
 
     def _read(self) -> Dict[str, Any]:
         with open(self.filepath, "r", encoding="utf-8") as f:

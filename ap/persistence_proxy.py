@@ -17,6 +17,10 @@ class PersistenceProxy:
     def _ensure_cache(self) -> Dict[str, Any]:
         if self._cache is None or (time.time() - self._cache_ts) > 1.0:
             self._cache = self._db.read_all()
+            # Backward-compatible defaults
+            self._cache.setdefault("instances", {})
+            self._cache.setdefault("events", [])
+            self._cache.setdefault("aggregates", {})
             self._cache_ts = time.time()
         return self._cache
 
@@ -41,14 +45,29 @@ class PersistenceProxy:
         events.append(event)
         self._flush()
 
-    def list_events(self, activity_id: Optional[str] = None, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def increment_aggregate(self, activity_id: str, metric: str, delta: int = 1) -> None:
+        """Incrementa uma métrica agregada por activityID (sem duplicação de eventos)."""
         data = self._ensure_cache()
-        events: List[Dict[str, Any]] = data.get("events", [])
-        out: List[Dict[str, Any]] = []
-        for e in events:
-            if activity_id and e.get("activityID") != activity_id:
-                continue
-            if user_id and e.get("userID") != user_id:
-                continue
-            out.append(e)
-        return out
+        aggregates = data.setdefault("aggregates", {})
+        act = aggregates.setdefault(activity_id, {})
+        act[metric] = int(act.get(metric, 0)) + int(delta)
+        self._flush()
+
+    def get_aggregates(self, activity_id: str) -> Dict[str, Any]:
+        """Obtém o mapa de métricas agregadas para um activityID."""
+        data = self._ensure_cache()
+        aggregates = data.get("aggregates", {})
+        return dict(aggregates.get(activity_id, {}))
+
+
+def list_events(self, activity_id: Optional[str] = None, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    data = self._ensure_cache()
+    events: List[Dict[str, Any]] = data.get("events", [])
+    out: List[Dict[str, Any]] = []
+    for e in events:
+        if activity_id and e.get("activityID") != activity_id:
+            continue
+        if user_id and e.get("userID") != user_id:
+            continue
+        out.append(e)
+    return out

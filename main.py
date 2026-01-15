@@ -12,7 +12,7 @@ from ap.builder import WordSearchGameBuilder
 from ap.contract_adapter import ContractAdapter
 from ap.facade import ActivityProviderFacade
 from ap.event_bus import EventBus
-from ap.activity_observers import PersistenceEventObserver
+from ap.activity_observers import PersistenceEventObserver, AnalyticsEventObserver
 from ap.instance_manager import InstanceManager
 from ap.models import (
     AnalyticsListResponse,
@@ -72,6 +72,7 @@ def create_app() -> FastAPI:
     proxy = PersistenceProxy(db)
     event_bus = EventBus()
     event_bus.attach(PersistenceEventObserver(proxy))
+    event_bus.attach(AnalyticsEventObserver(proxy))
     adapter = ContractAdapter()
     instance_manager = InstanceManager()
     builder = WordSearchGameBuilder()
